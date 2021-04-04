@@ -30,6 +30,7 @@ print(Fore.RESET, "-" * 32)
 print(Fore.LIGHTBLUE_EX, "Nama:", Fore.GREEN, item.name)
 print(Fore.LIGHTBLUE_EX, "Harga:", Fore.GREEN, item.get_price(item.price))
 print(Fore.LIGHTBLUE_EX, "Brand:", Fore.GREEN, item.brand)
+print(Fore.LIGHTBLUE_EX, "Stok:", Fore.GREEN, item.stock)
 print(Fore.LIGHTBLUE_EX, "Lokasi Toko:", Fore.GREEN, item.shop_location)
 print(Fore.RESET, "-" * 32)
 print()
@@ -74,6 +75,7 @@ if not item.is_flash_sale:
         print(INFO, "Menunggu Flash Sale...", end='\r')
         sleep((datetime.fromtimestamp(item.upcoming_flash_sale.start_time) - datetime.now())
               .total_seconds() - 2)
+        print(INFO, "Bersiap siap...", end='\r')
         while not item.is_flash_sale:
             item = bot.fetch_item(item.item_id, item.shop_id)
     else:
@@ -89,7 +91,7 @@ bot.checkout(PaymentInfo(
     channel=selected_payment_channel,
     option_info=selected_option_info
 ), cart_item)
-final = datetime.now() - start
-print(INFO, "Item berhasil dibeli dalam waktu", Fore.YELLOW, final.seconds, "detik", final.microseconds // 1000,
+end = datetime.now() - start
+print(INFO, "Item berhasil dibeli dalam waktu", Fore.YELLOW, end.seconds, "detik", end.microseconds // 1000,
       "milis")
 print(Fore.GREEN + "[*]", "Sukses")
