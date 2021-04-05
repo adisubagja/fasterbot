@@ -16,7 +16,7 @@ jika sudah login, tinggal jalankan botnya dengan perintah dibawah
 ```
 python main.py
 ```
-Note: harus login ulang setelah beberapa hari
+Note: perlu login ulang setelah beberapa hari
 # Speed?
 untuk speed tergantung koneksi internet masing masing.
 dan tidak menjamin 100% dapat.
