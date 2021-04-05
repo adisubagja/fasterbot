@@ -4,6 +4,7 @@ from random      import choices
 from string      import ascii_letters, digits
 from colorama    import Fore, init
 from hashlib     import md5, sha256
+import os
 import requests
 
 
@@ -105,6 +106,11 @@ class Login:
 
 
 if __name__ == "__main__":
+    if os.name == "nt":
+        os.system("cls")
+    else:
+        os.system("clear")
+
     init()
     INFO = Fore.LIGHTBLUE_EX + "[*]" + Fore.BLUE
     INPUT = Fore.LIGHTGREEN_EX + "[?]" + Fore.GREEN
