@@ -6,11 +6,31 @@ from time         import sleep
 from datetime     import datetime
 import os
 
-
 init()
 INFO = Fore.LIGHTBLUE_EX + "[*]" + Fore.BLUE
 INPUT = Fore.LIGHTGREEN_EX + "[?]" + Fore.GREEN
 PROMPT = Fore.LIGHTRED_EX + "[!]" + Fore.RED
+
+
+def int_input(prompt_: str, max_: int = -1, min_: int = 1) -> int:
+    input_: str
+    while True:
+        input_ = input(f"{INPUT} {prompt_}")
+        if input_.isdigit():
+            input_int = int(input_)
+            if max_ == -1:
+                return input_int
+            elif min_ <= input_int <= max_:
+                return input_int
+            elif input_int > max_:
+                print(PROMPT, "Angka terlalu banyak!")
+                continue
+            elif input_int < min_:
+                print(PROMPT, "Angka terlalu sedikit!")
+                continue
+        print(PROMPT, "Masukkan angka!")
+
+
 if os.name.lower() == "nt":
     os.system("cls")
 else:
@@ -37,24 +57,24 @@ print()
 
 selected_model = 0
 if len(item.models) > 1:
-    print(INFO, "Pilih model")
+    print(INFO, "Pilih model/variasi")
     print(Fore.RESET, "-" * 32)
     for index, model in enumerate(item.models):
-        print(Fore.GREEN + '[' + str(index) + ']' + Fore.BLUE, model.name)
+        print(Fore.GREEN + '[' + str(index+1) + ']' + Fore.BLUE, model.name)
         print('\t', Fore.LIGHTBLUE_EX, "Harga:", Fore.GREEN, item.get_price(model.price))
         print('\t', Fore.LIGHTBLUE_EX, "Stok:", Fore.GREEN, model.stock)
         print('\t', Fore.LIGHTBLUE_EX, "ID Model:", Fore.GREEN, model.model_id)
         print(Fore.RESET, "-" * 32)
     print()
-    selected_model = int(input(INPUT + " Pilihan: "))
+    selected_model = int_input("Pilihan: ", len(item.models))-1
     print()
 
 print(INFO, "Pilih metode pembayaran")
 payment_channels = dict(enumerate(PaymentChannel))
 for index, channel in payment_channels.items():
-    print(Fore.GREEN + '[' + str(index) + ']' + Fore.BLUE, channel.name)
+    print(Fore.GREEN + '[' + str(index+1) + ']' + Fore.BLUE, channel.name)
 print()
-selected_payment_channel = payment_channels[int(input(INPUT + " Pilihan: "))]
+selected_payment_channel = payment_channels[int_input("Pilihan: ", len(payment_channels))-1]
 print()
 
 selected_option_info = PaymentChannelOptionInfo.NONE
@@ -64,9 +84,9 @@ if selected_payment_channel is PaymentChannel.TRANSFER_BANK or \
                         PaymentChannel.TRANSFER_BANK else 7:None if selected_payment_channel is
                         PaymentChannel.AKULAKU else 7]))
     for index, option_info in options_info.items():
-        print(Fore.GREEN + '[' + str(index) + ']' + Fore.BLUE, option_info.name)
+        print(Fore.GREEN + '[' + str(index+1) + ']' + Fore.BLUE, option_info.name)
     print()
-    selected_option_info = options_info[int(input(INPUT + " Pilihan: "))]
+    selected_option_info = options_info[int_input("Pilihan: ", len(options_info))-1]
 
 if not item.is_flash_sale:
     if item.upcoming_flash_sale is not None:
