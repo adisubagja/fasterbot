@@ -48,13 +48,13 @@ class Login:
                 "support_ivs": True,
                 "support_whats_app": True
             }),
-            cookies=self.session.cookies.get_dict()
+            cookies=self.session.cookies
         )
         data = resp.json()
-        if data["error"] != 77:
-            if data["error"] == 3:
-                raise Exception("Failed to login, verification code request (otp) failed: the verification code"
-                                f"requests has exceed the limit, please try again later, code: {data['error']}")
+        if data["error"] == 3:
+            raise Exception("Failed to login, verification code request (otp) failed: the verification code"
+                            f"requests has exceed the limit, please try again later, code: {data['error']}")
+        elif data["error"] == 2:
             raise Exception(f"failed to login, invalid username or password, code: {data['error']}")
 
     def __default_headers(self) -> dict:
@@ -69,7 +69,7 @@ class Login:
 
     def get_cookie_as_string(self) -> str:
         output = ""
-        for k, v in self.session.cookies.get_dict().items():
+        for k, v in self.session.cookies.items():
             output += f"{k}={v}; "
         return output[:-2]
 
