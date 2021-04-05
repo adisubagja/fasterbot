@@ -117,9 +117,9 @@ if __name__ == "__main__":
     ERROR = Fore.LIGHTRED_EX + "[!]" + Fore.RED
 
     print(INFO, "Masukkan username/email/nomor telepon")
-    user = input(INPUT + " username/email/nomor: ")
+    user = input(INPUT + " username/email/nomor: " + Fore.WHITE)
     print(INFO, "Masukkan password")
-    password = input(INPUT + " password: ")
+    password = input(INPUT + " password: " + Fore.WHITE)
     print(INFO, "Sedang login...")
 
     login = Login(user, password)
@@ -128,18 +128,19 @@ if __name__ == "__main__":
     print(Fore.GREEN + "[2]", Fore.BLUE + "SMS")
     print(Fore.GREEN + "[3]", Fore.BLUE + "Telepon")
     print()
-    verification_method = int(input(INPUT + " Pilihan: "))
+    verification_method = int(input(INPUT + " Pilihan: " + Fore.WHITE))
     login.send_otp({
         1: OTPChannel.WHATSAPP,
         2: OTPChannel.SMS,
         3: OTPChannel.TELEPHONE
     }[verification_method])
     print(INFO, "OTP Dikirim, Masukan kode otp")
-    code = input(INPUT + " kode otp: ")
+    code = input(INPUT + " kode otp: " + Fore.WHITE)
     print(INFO, "Memverifikasi...")
     login.verify(code)
     print(INFO, "Verifikasi berhasil")
     with open("cookie.txt", 'w') as f:
         f.write(login.get_cookie_as_string())
 
+    print(INFO, "Catatan: perlu login ulang setelah beberapa hari")
     print(INFO, "Login sukses")
