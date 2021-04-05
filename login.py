@@ -7,8 +7,9 @@ import requests
 
 
 class OTPChannel(Enum):
-    WHATSAPP = 0
+    WHATSAPP = 3
     SMS = 1
+    TELEPHONE = 2
 
 
 class Login:
@@ -110,8 +111,18 @@ if __name__ == "__main__":
     print(INFO, "Sedang login...")
 
     login = Login(user, hash_)
-    login.send_otp()
-    print(INFO, "OTP Dikirim lewat SMS")
+    print(INFO, "Pilih metode verifikasi")
+    print(Fore.GREEN + "[1]", Fore.BLUE + "WhatsApp")
+    print(Fore.GREEN + "[2]", Fore.BLUE + "SMS")
+    print(Fore.GREEN + "[3]", Fore.BLUE + "Telepon")
+    print()
+    verification_method = int(input(INPUT + " Pilihan: "))
+    login.send_otp({
+        1: OTPChannel.WHATSAPP,
+        2: OTPChannel.SMS,
+        3: OTPChannel.TELEPHONE
+    }[verification_method])
+    print(INFO, "OTP Dikirim, Masukan kode otp")
     code = input(INPUT + " kode otp: ")
     print(INFO, "Memverifikasi...")
     login.verify(code)
