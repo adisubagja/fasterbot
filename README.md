@@ -36,7 +36,7 @@ python login.py
 
 sudah login/siap digunakan.
 
-Note: perlu login ulang setelah beberapa hari
+Note: perlu login ulang setelah beberapa hari.
 
 jalankan scriptnya dengan perintah berikut
 ```
