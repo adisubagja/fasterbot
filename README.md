@@ -7,24 +7,36 @@ Install modul `requests` dan `colorama` dengan perintah berikut
 ```sh
 pip install requests colorama
 ```
-jika sudah, buka chrome dan buka https://shopee.co.id/ lalu login.
-tekan F12 lalu masuk tab network.
+# Login
+proses login tidak menggunakan password, melainkan menggunakan hash.
 
+1. pertama buka chrome incognito lalu buka web https://shopee.co.id/buyer/login .
+2. tekan F12, lalu masuk tab network
+3. 
 ![tab network](images/tab_network.png)
 
-refresh webpage dan cari item `/`
+3. masukkan username dan password lalu klik `Login`.
+6. cari item bertuliskan `login`
+7. 
+![item_login](images/item_login.png)
 
-![forward slash](images/forward_slash.png)
+7. lalu scroll sampai bawah dan klik kanan pada item `password`
+8. 
+![right click password](images/right_click_password.png)
+10. 
+11. pilih copy value.
+12. buka cmd/terminal
+13. jalankan `login.py` dengan perintah berikut
+```
+python login.py
+```
+14. masukkan username/email/no hp
+15. masukkan hash yang sudah disalin tadi
+16. selesaikan proses verifikasi
 
-klik item lalu klik kanan pada header "cookie" didalam "Request headers"
+sudah login/siap digunakan.
 
-![copy header](images/copy_header.png)
-
-pilih `copy value`.
-
-edit cookie.txt lalu paste dan save!
-
-selesai/sudah siap login
+Note: perlu login ulang setelah beberapa hari
 
 jalankan scriptnya dengan perintah berikut
 ```
