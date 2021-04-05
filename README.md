@@ -42,6 +42,12 @@ jalankan scriptnya dengan perintah berikut
 ```
 python main.py
 ```
-# Tambahan
+# Kenapa?
+Kenapa loginnya ribet?
+
+karena saya gk tau gimana proses hashing password saat login di shopee.
+# Speed?
 untuk speed tergantung koneksi internet masing masing.
-dan tidak menjamin 100% dapat
+dan tidak menjamin 100% dapat.
+
+saran menggunakan vps biar internetnya lancar
