@@ -3,6 +3,7 @@ from enum        import Enum
 from random      import choices
 from string      import ascii_letters, digits
 from colorama    import Fore, init
+from hashlib     import md5, sha256
 import requests
 
 
@@ -18,7 +19,7 @@ class Login:
     user: str
     user_agent: str
 
-    def __init__(self, user: str, hash_: str):
+    def __init__(self, user: str, password: str):
         self.user = user
 
         user_agent_ = open("user_agent.txt", 'r')
@@ -35,12 +36,14 @@ class Login:
             login_using = "email"
         elif user.isdigit():
             login_using = "phone"
+        password = md5(password.encode()).hexdigest()
+        password = sha256(password.encode()).hexdigest()
         resp = self.session.post(
             url="https://shopee.co.id/api/v2/authentication/login",
             headers=self.__default_headers(),
             data=dumps({
                 login_using: user,
-                "password": hash_,
+                "password": password,
                 "support_ivs": True,
                 "support_whats_app": True
             }),
@@ -48,6 +51,9 @@ class Login:
         )
         data = resp.json()
         if data["error"] != 77:
+            if data["error"] == 3:
+                raise Exception("Failed to login, verification code request (otp) failed: the verification code"
+                                f"requests has exceed the limit, please try again later, code: {data['error']}")
             raise Exception(f"failed to login, invalid username or password, code: {data['error']}")
 
     def __default_headers(self) -> dict:
@@ -78,7 +84,7 @@ class Login:
             })
         )
 
-    def verify(self, code: str) -> str:
+    def verify(self, code: str):
         resp = self.session.post(
             url="https://shopee.co.id/api/v2/authentication/vcode_login",
             headers=self.__default_headers(),
@@ -106,11 +112,11 @@ if __name__ == "__main__":
 
     print(INFO, "Masukkan username/email/nomor telepon")
     user = input(INPUT + " username/email/nomor: ")
-    print(INFO, "Masukkan Hash")
-    hash_ = input(INPUT + " hash: ")
+    print(INFO, "Masukkan password")
+    password = input(INPUT + " password: ")
     print(INFO, "Sedang login...")
 
-    login = Login(user, hash_)
+    login = Login(user, password)
     print(INFO, "Pilih metode verifikasi")
     print(Fore.GREEN + "[1]", Fore.BLUE + "WhatsApp")
     print(Fore.GREEN + "[2]", Fore.BLUE + "SMS")
