@@ -82,7 +82,8 @@ class Login:
                 "force_channel": True,
                 "operation": 5,
                 "support_whats_app": True
-            })
+            }),
+            cookies=self.session.cookies
         )
 
     def verify(self, code: str):
@@ -93,7 +94,8 @@ class Login:
                 "otp": code,
                 "phone": self.user,
                 "support_ivs": True
-            })
+            }),
+            cookies=self.session.cookies
         )
 
         data = resp.json()
