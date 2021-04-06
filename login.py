@@ -18,32 +18,32 @@ class Login:
     csrf_token: str
     session: requests.Session
     user: str
+    user_type: str
     user_agent: str
 
     def __init__(self, user: str, password: str):
         self.user = user
 
-        user_agent_ = open("user_agent.txt", 'r')
-        self.user_agent = user_agent_.read()
-        user_agent_.close()
+        user_agent = open("user_agent.txt", 'r')
+        self.user_agent = user_agent.read()
+        user_agent.close()
 
         self.session = requests.Session()
         self.session.post("https://shopee.co.id/buyer/login")
         self.session.cookies.set("csrftoken", Login.randomize_token())
         self.csrf_token = self.session.cookies.get("csrftoken")
 
-        login_using = "username"
-        if "@" in user:
-            login_using = "email"
-        elif user.isdigit():
-            login_using = "phone"
+        self.user_type = {
+            "@" in user: "email",
+            user.isdigit(): "phone"
+        }.get(True, "username")
         password = md5(password.encode()).hexdigest()
         password = sha256(password.encode()).hexdigest()
         resp = self.session.post(
             url="https://shopee.co.id/api/v2/authentication/login",
             headers=self.__default_headers(),
             data=dumps({
-                login_using: user,
+                self.user_type: user,
                 "password": password,
                 "support_ivs": True,
                 "support_whats_app": True
@@ -92,7 +92,7 @@ class Login:
             headers=self.__default_headers(),
             data=dumps({
                 "otp": code,
-                "phone": self.user,
+                self.user_type: self.user,
                 "support_ivs": True
             }),
             cookies=self.session.cookies
@@ -117,6 +117,7 @@ if __name__ == "__main__":
     INFO = Fore.LIGHTBLUE_EX + "[*]" + Fore.BLUE
     INPUT = Fore.LIGHTGREEN_EX + "[?]" + Fore.GREEN
     ERROR = Fore.LIGHTRED_EX + "[!]" + Fore.RED
+    WARNING = Fore.LIGHTYELLOW_EX + "[!]" + Fore.YELLOW
 
     print(INFO, "Masukkan username/email/nomor telepon")
     user = input(INPUT + " username/email/nomor: " + Fore.WHITE)
@@ -144,5 +145,5 @@ if __name__ == "__main__":
     with open("cookie.txt", 'w') as f:
         f.write(login.get_cookie_as_string())
 
-    print(INFO, "Catatan: perlu login ulang setelah beberapa hari")
+    print(WARNING, "Note: perlu login ulang setelah beberapa hari")
     print(INFO, "Login sukses")
