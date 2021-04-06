@@ -24,9 +24,8 @@ class Login:
     def __init__(self, user: str, password: str):
         self.user = user
 
-        user_agent = open("user_agent.txt", 'r')
-        self.user_agent = user_agent.read()
-        user_agent.close()
+        with open("user_agent.txt", 'r') as user_agent:
+            self.user_agent = user_agent.read()
 
         self.session = requests.Session()
         self.session.post("https://shopee.co.id/buyer/login")
