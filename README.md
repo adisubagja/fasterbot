@@ -1,5 +1,5 @@
 # Requirement
-- Python 3.7.x
+- Python 3.8.x
 
 Download python di https://www.python.org/downloads/
 # Setup
