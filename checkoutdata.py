@@ -34,20 +34,3 @@ class PaymentChannelOptionInfo(Enum):
 class PaymentInfo:
     channel: PaymentChannel
     option_info: PaymentChannelOptionInfo = PaymentChannelOptionInfo.NONE
-
-
-@dataclass
-class CheckoutData:
-    can_checkout: bool
-    cart_type: int
-    client_id: int
-    shipping_orders: list
-    disabled_checkout_info: dict
-    checkout_price_data: dict
-    promotion_data: dict
-    dropshipping_info: dict
-    selected_payment_channel_data: dict
-    shoporders: list
-    order_update_info: dict
-    buyer_txn_fee_info: dict
-    timestamp: int
