@@ -6,9 +6,9 @@ Download python di https://www.python.org/downloads/
 - Termux
 - Python 3.8.x
 
-Download termux di play store. lalu install `python 3` dengan perintah berikut
+Download termux di play store. lalu install `python` dengan perintah berikut
 ```
-pkg install python3
+pkg install python
 ```
 # Setup
 Install modul `requests` dan `colorama` dengan perintah berikut
