@@ -128,7 +128,12 @@ class Bot:
             shop_id=item.shop_id
         )
 
-    def __checkout_get(self, payment: PaymentInfo, item: CartItem) -> CheckoutData:
+    def __checkout_get(self, payment: PaymentInfo, item: CartItem) -> bytes:
+        """
+        :param payment: Payment info
+        :param item: Item
+        :return: Checkout data
+        """
         resp = requests.post(
             url="https://shopee.co.id/api/v2/checkout/get",
             headers=self.__default_headers(),
@@ -218,22 +223,8 @@ class Bot:
             print(resp.status_code)
             print(resp.text)
             raise Exception("failed to get checkout info")
-        data = resp.json()
-        return CheckoutData(
-            can_checkout=data["can_checkout"],
-            cart_type=data["cart_type"],
-            client_id=data["client_id"],
-            shipping_orders=data["shipping_orders"],
-            disabled_checkout_info=data["disabled_checkout_info"],
-            checkout_price_data=data["checkout_price_data"],
-            promotion_data=data["promotion_data"],
-            dropshipping_info=data["dropshipping_info"],
-            selected_payment_channel_data=data["selected_payment_channel_data"],
-            shoporders=data["shoporders"],
-            order_update_info=data["order_update_info"],
-            buyer_txn_fee_info=data["buyer_txn_fee_info"],
-            timestamp=data["timestamp"]
-        )
+
+        return resp.content
 
     def checkout(self, payment: PaymentInfo, item: CartItem):
         """
@@ -241,27 +232,10 @@ class Bot:
         :param item: the item to checkout
         checkout an item that has been added to cart
         """
-        data = self.__checkout_get(payment, item)
         resp = requests.post(
             url="https://shopee.co.id/api/v2/checkout/place_order",
             headers=self.__default_headers(),
-            data=dumps({
-                "status": 200,
-                "headers": {},
-                "cart_type": data.cart_type,
-                "shipping_orders": data.shipping_orders,
-                "disabled_checkout_info": data.disabled_checkout_info,
-                "timestamp": data.timestamp,
-                "checkout_price_data": data.checkout_price_data,
-                "client_id": data.client_id,
-                "promotion_data": data.promotion_data,
-                "dropshipping_info": data.dropshipping_info,
-                "selected_payment_channel_data": data.selected_payment_channel_data,
-                "shoporders": data.shoporders,
-                "can_checkout": data.can_checkout,
-                "order_update_info": data.order_update_info,
-                "buyer_txn_fee_info": data.buyer_txn_fee_info
-            })
+            data=self.__checkout_get(payment, item)
         )
         if "error" in resp.json():
             print(resp.text)
