@@ -8,6 +8,7 @@ class PaymentChannel(Enum):
     AKULAKU = 8000700
     TRANSFER_BANK = 8005200
     COD_BAYAR_DI_TEMPAT = 89000
+    SHOPEE_PAY = 8001400
 
 
 class PaymentChannelOptionInfo(Enum):
