@@ -140,10 +140,10 @@ if __name__ == "__main__":
     try:
         login = Login(user, password)
     except LoginException as e:
-        if e.code() == 3:
-            print(ERROR, "Permintaan kode verifikasi telah melebihi batas, coba lagi nanti")
-        elif e.code() == 2:
-            print(ERROR, "Gagal masuk, nama pengguna atau kata sandi tidak valid")
+        print(ERROR, {
+            3: "Permintaan kode verifikasi telah melebihi batas, coba lagi nanti",
+            2: "Gagal masuk, nama pengguna atau kata sandi tidak valid"
+        }.get(e.code(), f"Error tidak diketahui, code: {e.code()}"))
         exit(1)
     print(INFO, "Pilih metode verifikasi")
     print(Fore.GREEN + "[1]", Fore.BLUE + "WhatsApp")
