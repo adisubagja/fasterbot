@@ -8,6 +8,17 @@ import os
 import requests
 
 
+class LoginException(Exception):
+    __code: int
+
+    def __init__(self, msg: str, code: int = 0):
+        super().__init__(msg)
+        self.__code = code
+
+    def code(self) -> int:
+        return self.__code
+
+
 class OTPChannel(Enum):
     WHATSAPP = 3
     SMS = 1
@@ -51,10 +62,10 @@ class Login:
         )
         data = resp.json()
         if data["error"] == 3:
-            raise Exception("Failed to login, verification code request (otp) failed: the verification code"
-                            f"requests has exceed the limit, please try again later, code: {data['error']}")
+            raise LoginException("Failed to login, verification code request (otp) failed: the verification code"
+                            f"requests has exceed the limit, please try again later, code: {data['error']}", 3)
         elif data["error"] == 2:
-            raise Exception(f"failed to login, invalid username or password, code: {data['error']}")
+            raise LoginException(f"failed to login, invalid username or password, code: {data['error']}", 2)
 
     def __default_headers(self) -> dict:
         return {
@@ -85,7 +96,7 @@ class Login:
             cookies=self.session.cookies
         )
 
-    def verify(self, code: str):
+    def verify(self, code: str) -> bool:
         resp = self.session.post(
             url="https://shopee.co.id/api/v2/authentication/vcode_login",
             headers=self.__default_headers(),
@@ -99,7 +110,8 @@ class Login:
 
         data = resp.json()
         if data["error"] is not None:
-            raise Exception("failed to login, invalid otp code")
+            return False
+        return True
 
     @staticmethod
     def randomize_token() -> str:
@@ -124,7 +136,15 @@ if __name__ == "__main__":
     password = input(INPUT + " password: " + Fore.WHITE)
     print(INFO, "Sedang login...")
 
-    login = Login(user, password)
+    login: Login
+    try:
+        login = Login(user, password)
+    except LoginException as e:
+        if e.code() == 3:
+            print(ERROR, "Permintaan kode verifikasi telah melebihi batas, coba lagi nanti")
+        elif e.code() == 2:
+            print(ERROR, "Gagal masuk, nama pengguna atau kata sandi tidak valid")
+        exit(1)
     print(INFO, "Pilih metode verifikasi")
     print(Fore.GREEN + "[1]", Fore.BLUE + "WhatsApp")
     print(Fore.GREEN + "[2]", Fore.BLUE + "SMS")
@@ -139,8 +159,11 @@ if __name__ == "__main__":
     print(INFO, "OTP Dikirim, Masukan kode otp")
     code = input(INPUT + " kode otp: " + Fore.WHITE)
     print(INFO, "Memverifikasi...")
-    login.verify(code)
-    print(INFO, "Verifikasi berhasil")
+    if login.verify(code):
+        print(INFO, "Verifikasi berhasil")
+    else:
+        print(ERROR, "Verifikasi gagal, kode otp tidak valid")
+        exit(1)
     with open("cookie.txt", 'w') as f:
         f.write(login.get_cookie_as_string())
 
