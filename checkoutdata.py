@@ -10,6 +10,10 @@ class PaymentChannel(Enum):
     COD_BAYAR_DI_TEMPAT = 89000
     SHOPEE_PAY = 8001400
 
+    @property
+    def version(self) -> int:
+        return 1 if self is PaymentChannel.COD_BAYAR_DI_TEMPAT else 2
+
 
 class PaymentChannelOptionInfo(Enum):
     NONE = ""
