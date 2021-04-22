@@ -109,9 +109,7 @@ class Login:
         )
 
         data = resp.json()
-        if data["error"] is not None:
-            return False
-        return True
+        return data["error"] is None
 
     @staticmethod
     def randomize_token() -> str:
