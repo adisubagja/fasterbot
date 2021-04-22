@@ -8,6 +8,22 @@ from checkoutdata import *
 import requests
 
 
+class JustAnException(Exception):  # i know this name is bad, but idk what to name
+    __code: int
+    __msg: str
+
+    def __init__(self, msg: str, code: int = -1):
+        super().__init__(msg)
+        self.__code = code
+        self.__msg = msg
+
+    def code(self) -> int:
+        return self.__code
+
+    def msg(self) -> str:
+        return self.__msg
+
+
 class Bot:
     user: User
 
@@ -34,14 +50,14 @@ class Bot:
             - https://shopee.co.id/Item-Name.xxxx.xxxx
         """
         # https://shopee.co.id/product/xxxx/xxxx
-        match = search(r".*/(?P<shopid>\d+)/(?P<itemid>\d+).*?", url)
+        match = search(r".*/(?P<shopid>\d+)/(?P<itemid>\d+)", url)
         if match is not None:
             return self.fetch_item(int(match.group("itemid")), int(match.group("shopid")))
 
         # https://shopee.co.id/Item-Name.xxxx.xxxx
         match = search(r".*\.(?P<shopid>\d+)\.(?P<itemid>\d+)", url)
         if match is None:
-            raise ValueError("unexpected url")
+            raise JustAnException("unexpected url", 0x90b109)
         return self.fetch_item(int(match.group("itemid")), int(match.group("shopid")))
 
     def fetch_item(self, item_id: int, shop_id: int) -> Item:
@@ -54,7 +70,7 @@ class Bot:
         )
         item_data = resp.json()["item"]
         if item_data is None:
-            raise NameError("item not found")
+            raise JustAnException("item not found", 0x69)
         return Item(
             item_id=item_data["itemid"],
             shop_id=item_data["shopid"],
@@ -97,7 +113,7 @@ class Bot:
 
     def add_to_cart(self, item: Item, model_index: int) -> CartItem:
         if not item.models[model_index].is_available():
-            raise Exception("out of stock")
+            raise JustAnException("out of stock", 0x2323)
         resp = requests.post(
             url="https://shopee.co.id/api/v2/cart/add_to_cart",
             headers=self.__default_headers(),
@@ -117,7 +133,7 @@ class Bot:
         if data["error"] != 0:
             print("modelid:", item.models[0].model_id)
             print(resp.text)
-            raise Exception(f"failed to add to cart {data['error']}")
+            raise JustAnException(f"failed to add to cart {data['error']}", 0xb612)
         data = data["data"]["cart_item"]
         return CartItem(
             add_on_deal_id=item.add_on_deal_info.add_on_deal_id,
@@ -137,7 +153,6 @@ class Bot:
         resp = requests.post(
             url="https://shopee.co.id/api/v2/checkout/get",
             headers=self.__default_headers(),
-            # TODO: Implement data
             data=dumps({
                 "cart_type": 0,
                 "client_id": 0,
@@ -168,7 +183,7 @@ class Bot:
                 "selected_payment_channel_data": {
                     "channel_id": payment.channel.value,
                     "channel_item_option_info": {"option_info": payment.option_info.value},
-                    "version": 2
+                    "version": payment.channel.version
                 },
                 "shipping_orders": [{
                     "buyer_address_data": {
@@ -222,7 +237,7 @@ class Bot:
         if not resp.ok:
             print(resp.status_code)
             print(resp.text)
-            raise Exception("failed to get checkout info")
+            raise JustAnException("failed to get checkout info", 0x1111)
 
         return resp.content
 
@@ -239,12 +254,12 @@ class Bot:
         )
         if "error" in resp.json():
             print(resp.text)
-            raise Exception("failed to checkout")
+            raise JustAnException("failed to checkout", 0xaaaa)
         elif resp.status_code == 406:
             print(resp.text)
-            raise Exception("response not acceptable, maybe the item has run out")
+            raise JustAnException("response not acceptable, maybe the item has run out", 0xaeee)
         elif not resp.ok:
-            raise Exception(f"failed to checkout, response not ok: {resp.status_code}")
+            raise JustAnException(f"failed to checkout, response not ok: {resp.status_code}", 0xbacc)
 
     def buy(self, item: Item, model_index: int, payment: PaymentInfo):
         """
@@ -285,4 +300,4 @@ class Bot:
             })
         )
         if resp.json()["error"] != 0:
-            raise Exception("failed to remove item from cart")
+            raise JustAnException("failed to remove item from cart", 0x2232)
