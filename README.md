@@ -22,11 +22,12 @@ pertama, silahkan login dulu. jalankan perintah dibawah
 ```
 python login.py
 ```
-jika sudah login, tinggal jalankan botnya dengan perintah dibawah
+setelah berhasil, informasi login akan disimpan di cookie.txt, jadi tidak perlu susah" login setiap kali mau pake.
+
+nah sekarang tinggal jalankan botnya
 ```
 python main.py
 ```
-Note: perlu login ulang setelah beberapa hari
 # Speed?
 untuk speed tergantung koneksi internet masing masing.
 dan tidak menjamin 100% dapat.
