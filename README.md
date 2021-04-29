@@ -32,7 +32,6 @@ python main.py
 untuk speed tergantung koneksi internet masing masing.
 dan tidak menjamin 100% dapat.
 
-saran menggunakan vps biar internetnya lancar
-
-# Tutorials
-- Tutorial mempercepat bot: https://youtu.be/dQw4w9WgXcQ
+# Video
+- Cara mempercepat bot: https://youtu.be/dQw4w9WgXcQ
+- Cara penggunaan: https://youtu.be/oHg5SJYRHA0
