@@ -1,6 +1,6 @@
 from bot          import Bot, JustAnException
 from user         import User
-from checkoutdata import PaymentInfo, PaymentChannel, PaymentChannelOptionInfo
+from checkoutdata import PaymentChannelList
 from colorama     import Fore, init
 from time         import sleep
 from datetime     import datetime
@@ -72,43 +72,21 @@ try:
         print()
 
     print(INFO, "Pilih metode pembayaran")
-    payment_channels = dict(enumerate(PaymentChannel))
+    payment_channels = dict(enumerate(PaymentChannelList))
     for index, channel in payment_channels.items():
-        print(Fore.GREEN + '[' + str(index+1) + ']' + Fore.BLUE, {
-                PaymentChannel.ALFAMART           : "Alfamart",
-                PaymentChannel.INDOMART_ISAKU     : "Indomart iSaku",
-                PaymentChannel.AKULAKU            : "Akulaku",
-                PaymentChannel.TRANSFER_BANK      : "Transfer Bank",
-                PaymentChannel.COD_BAYAR_DI_TEMPAT: "COD (Bayar di tempat)",
-                PaymentChannel.SHOPEE_PAY         : "ShopeePay"
-            }[channel])
+        print(f"{Fore.GREEN}[{index+1}] {Fore.BLUE}{channel.value.name()}")
     print()
-    selected_payment_channel = payment_channels[int_input("Pilihan: ", len(payment_channels))-1]
+    selected_payment_channel = payment_channels[int_input("Pilihan: ", len(payment_channels))-1].value
     print()
 
-    selected_option_info = PaymentChannelOptionInfo.NONE
-    if selected_payment_channel is PaymentChannel.TRANSFER_BANK or \
-            selected_payment_channel is PaymentChannel.AKULAKU:
-        options_info = dict(enumerate(list(PaymentChannelOptionInfo)[1 if selected_payment_channel is
-                            PaymentChannel.TRANSFER_BANK else 7:None if selected_payment_channel is
-                            PaymentChannel.AKULAKU else 7]))
-        for index, option_info in options_info.items():
-            print(Fore.GREEN + '[' + str(index+1) + ']' + Fore.BLUE, {
-                    PaymentChannelOptionInfo.TRANSFER_BANK_BCA_AUTO: "Transfer Bank BCA (Dicek Otomatis)",
-                    PaymentChannelOptionInfo.TRANSFER_BANK_BNI_AUTO: "Transfer Bank BNI (Dicek Otomatis)",
-                    PaymentChannelOptionInfo.TRANSFER_BANK_BRI_AUTO: "Transfer Bank BRI (Dicek Otomatis)",
-                    PaymentChannelOptionInfo.TRANSFER_BANK_PERMATA_AUTO: "Transfer Bank Permata (Dicek Otomatis)",
-                    PaymentChannelOptionInfo.TRANSFER_BANK_SYARIAH_AUTO: "Transfer Bank Syariah (Dicek Otomatis)",
-                    PaymentChannelOptionInfo.TRANSFER_BANK_MANDIRI_AUTO: "Transfer Bank Mandiri (Dicek Otomatis)",
-                    PaymentChannelOptionInfo.AKULAKU_CICILAN_1X: "Akulaku Cicilan 1X",
-                    PaymentChannelOptionInfo.AKULAKU_CICILAN_2X: "Akulaku Cicilan 2X",
-                    PaymentChannelOptionInfo.AKULAKU_CICILAN_3X: "Akulaku Cicilan 3X",
-                    PaymentChannelOptionInfo.AKULAKU_CICILAN_6X: "Akulaku Cicilan 6X",
-                    PaymentChannelOptionInfo.AKULAKU_CICILAN_9X: "Akulaku Cicilan 9X",
-                    PaymentChannelOptionInfo.AKULAKU_CICILAN_12X: "Akulaku Cicilan 12X"
-                }[option_info])
+    selected_option_info = None
+    if selected_payment_channel.has_option():
+        options = dict(enumerate(selected_payment_channel.options().keys()))
+        for index, option in options.items():
+            print(f"{Fore.GREEN}[{index+1}] {Fore.BLUE}{option}")
         print()
-        selected_option_info = options_info[int_input("Pilihan: ", len(options_info))-1]
+        selected_option_info = selected_payment_channel.options()[options[
+            int_input("Pilihan: ", len(options))-1]]
 
     if not item.is_flash_sale:
         if item.upcoming_flash_sale is not None:
@@ -129,10 +107,7 @@ try:
     print(INFO, "Menambah item ke cart...")
     cart_item = bot.add_to_cart(item, selected_model)
     print(INFO, "Checkout item...")
-    bot.checkout(PaymentInfo(
-        channel=selected_payment_channel,
-        option_info=selected_option_info
-    ), cart_item)
+    bot.checkout(selected_payment_channel, selected_option_info, cart_item)
     end = datetime.now() - start
     print(INFO, "Item berhasil dibeli dalam waktu", Fore.YELLOW, end.seconds, "detik", end.microseconds // 1000,
           "milis")
@@ -149,7 +124,4 @@ except JustAnException as e:
         0xbacc  : "gagal checkout, respon tidak ok",
         0x2232  : "gagal menghapus item dari cart"
     }.get(e.code(), f"Error tidak diketahui, code: {e.code()}"))
-    exit(1)
-except Exception:
-    print(ERROR, "gagal login, cookie tidak valid, silahkan login ulang")
     exit(1)
