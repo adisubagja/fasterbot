@@ -86,7 +86,6 @@ try:
             print(f"{Fore.GREEN}[{index+1}] {Fore.BLUE}{option}")
         print()
         selected_option_info = options[int_input("Pilihan: ", len(options))-1]
-        print(selected_option_info)
 
     if not item.is_flash_sale:
         if item.upcoming_flash_sale is not None:
