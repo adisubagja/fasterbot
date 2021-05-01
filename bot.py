@@ -115,7 +115,7 @@ class Bot:
         if not item.models[model_index].is_available():
             raise JustAnException("out of stock", 0x2323)
         resp = requests.post(
-            url="https://shopee.co.id/api/v2/cart/add_to_cart",
+            url="https://shopee.co.id/api/v4/cart/add_to_cart",
             headers=self.__default_headers(),
             data=dumps({
                 "checkout": True,
@@ -137,14 +137,14 @@ class Bot:
         data = data["data"]["cart_item"]
         return CartItem(
             add_on_deal_id=item.add_on_deal_info.add_on_deal_id,
-            item_group_id=str(data["item_group_id"]) if data["item_group_id"] != 0 else None,
+            item_group_id=str(data["item_group_id"]) if data["item_group_id"] is not None else 0,
             item_id=data["itemid"],
             model_id=data["modelid"],
             price=data["price"],
             shop_id=item.shop_id
         )
 
-    def __checkout_get(self, payment: PaymentInfo, item: CartItem) -> bytes:
+    def __checkout_get(self, payment: PaymentChannel, selected_option: str, item: CartItem) -> bytes:
         """
         :param payment: Payment info
         :param item: Item
@@ -181,9 +181,10 @@ class Bot:
                     "use_coins": False
                 },
                 "selected_payment_channel_data": {
-                    "channel_id": payment.channel.value,
-                    "channel_item_option_info": {"option_info": payment.option_info.value},
-                    "version": payment.channel.version
+                    "channel_id": payment.channel_id(),
+                    "channel_item_option_info": {"option_info": payment.options()[selected_option]
+                        if payment.has_option() else ""},
+                    "version": payment.version()
                 },
                 "shipping_orders": [{
                     "buyer_address_data": {
@@ -241,16 +242,17 @@ class Bot:
 
         return resp.content
 
-    def checkout(self, payment: PaymentInfo, item: CartItem):
+    def checkout(self, payment: PaymentChannel, selected_option: str, item: CartItem):
         """
         :param payment: payment method like COD/Alfamart
+        :param selected_option: selected option :)
         :param item: the item to checkout
         checkout an item that has been added to cart
         """
         resp = requests.post(
             url="https://shopee.co.id/api/v2/checkout/place_order",
             headers=self.__default_headers(),
-            data=self.__checkout_get(payment, item)
+            data=self.__checkout_get(payment, selected_option, item)
         )
         if "error" in resp.json():
             print(resp.text)
@@ -260,44 +262,3 @@ class Bot:
             raise JustAnException("response not acceptable, maybe the item has run out", 0xaeee)
         elif not resp.ok:
             raise JustAnException(f"failed to checkout, response not ok: {resp.status_code}", 0xbacc)
-
-    def buy(self, item: Item, model_index: int, payment: PaymentInfo):
-        """
-        :param item: the item to buy
-        :param model_index: selected model
-        :param payment: payment method
-        just another way to add item to cart and checkout
-        """
-        cart_item = self.add_to_cart(item, model_index)
-        self.checkout(payment, cart_item)
-
-    def remove_item_from_cart(self, cart_item: CartItem):
-        """
-        :param cart_item: cart item to be removed
-        remove item from cart
-        """
-        resp = requests.post(
-            url="https://shopee.co.id/api/v4/cart/update",
-            headers=self.__default_headers(),
-            data=dumps({
-                "action_type": 2,
-                "updated_shop_order_ids": [
-                    {
-                        "item_briefs": [
-                            {
-                                "add_on_deal_id": cart_item.add_on_deal_id,
-                                "checkout": False,
-                                "item_group_id": cart_item.item_group_id,
-                                "itemid": cart_item.item_id,
-                                "modelid": cart_item.model_id,
-                                "price": cart_item.price,
-                                "shopid": cart_item.shop_id
-                            }
-                        ],
-                        "shopid": cart_item.shop_id
-                    }
-                ]
-            })
-        )
-        if resp.json()["error"] != 0:
-            raise JustAnException("failed to remove item from cart", 0x2232)
