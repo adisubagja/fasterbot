@@ -4,7 +4,7 @@ from user         import User
 from json         import dumps
 from re           import search
 from time         import time
-from checkoutdata import *
+from payment import *
 import requests
 
 

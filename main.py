@@ -1,6 +1,6 @@
 from bot          import Bot, JustAnException
 from user         import User
-from checkoutdata import PaymentChannelList
+from payment import PaymentChannelList
 from colorama     import Fore, init
 from time         import sleep
 from datetime     import datetime
