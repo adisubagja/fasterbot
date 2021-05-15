@@ -10,15 +10,12 @@ Download termux di play store. lalu install `python` dengan perintah berikut
 ```
 pkg install python
 ```
-# Setup
+# Cara Penggunaan
 Install modul `requests` dan `colorama` dengan perintah berikut
-```sh
+```
 pip install requests colorama
 ```
-# Usage
-pastikan sudah berada di direktori `fasterbot`.
-
-pertama, silahkan login dulu. jalankan perintah dibawah
+jika sudah, silahkan login dulu. jalankan perintah dibawah
 ```
 python login.py
 ```
