@@ -1,10 +1,12 @@
-from bot          import Bot, JustAnException
-from user         import User
+from bot import Bot, JustAnException
+from user import User
 from payment import PaymentChannelList
-from colorama     import Fore, init
-from time         import sleep
-from datetime     import datetime
+from colorama import Fore, init
+from time import sleep
+from datetime import datetime
 import os
+import pickle
+
 
 init()
 INFO = Fore.LIGHTBLUE_EX + "[*]" + Fore.BLUE
@@ -32,15 +34,19 @@ def int_input(prompt_: str, max_: int = -1, min_: int = 1) -> int:
         print(PROMPT, "Masukkan angka!")
 
 
+def line():
+    print(Fore.RESET, "-" * 32)
+
+
 if os.name.lower() == "nt":
     os.system("cls")
 else:
     os.system("clear")
+
 try:
     print(INFO, "Mengambil informasi user...", end='\r')
-    cookie = open("cookie.txt", 'r')
-    user = User.login(cookie.read())
-    cookie.close()
+    with open("cookie", 'rb') as f:
+        user = User.login(pickle.load(f))
     print(INFO, "Welcome", Fore.GREEN, user.name, ' ' * 10)
     print()
 
@@ -48,25 +54,25 @@ try:
     bot = Bot(user)
     item = bot.fetch_item_from_url(input(INPUT + " url: " + Fore.RESET))
 
-    print(Fore.RESET, "-" * 32)
+    line()
     print(Fore.LIGHTBLUE_EX, "Nama:", Fore.GREEN, item.name)
     print(Fore.LIGHTBLUE_EX, "Harga:", Fore.GREEN, item.get_price(item.price))
     print(Fore.LIGHTBLUE_EX, "Brand:", Fore.GREEN, item.brand)
     print(Fore.LIGHTBLUE_EX, "Stok:", Fore.GREEN, item.stock)
     print(Fore.LIGHTBLUE_EX, "Lokasi Toko:", Fore.GREEN, item.shop_location)
-    print(Fore.RESET, "-" * 32)
+    line()
     print()
 
     selected_model = 0
     if len(item.models) > 1:
         print(INFO, "Pilih model/variasi")
-        print(Fore.RESET, "-" * 32)
+        line()
         for index, model in enumerate(item.models):
             print(Fore.GREEN + '[' + str(index+1) + ']' + Fore.BLUE, model.name)
             print('\t', Fore.LIGHTBLUE_EX, "Harga:", Fore.GREEN, item.get_price(model.price))
             print('\t', Fore.LIGHTBLUE_EX, "Stok:", Fore.GREEN, model.stock)
             print('\t', Fore.LIGHTBLUE_EX, "ID Model:", Fore.GREEN, model.model_id)
-            print(Fore.RESET, "-" * 32)
+            line()
         print()
         selected_model = int_input("Pilihan: ", len(item.models))-1
         print()
@@ -113,14 +119,13 @@ try:
     print(Fore.GREEN + "[*]", "Sukses")
 except JustAnException as e:
     print(ERROR, {
-        0x90b109: "url tidak cocok",
-        0x69    : "item tidak ditemukan",
-        0x2323  : "stok habis",
-        0xb612  : "gagal menambah item ke cart",
-        0x1111  : "gagal mengambil info checkout",
-        0xaaaa  : "gagal checkout",
-        0xaeee  : "respon tidak diterima, mungkin item sudah habis (anda telat)",
-        0xbacc  : "gagal checkout, respon tidak ok",
-        0x2232  : "gagal menghapus item dari cart"
+        Bot.ERROR_UNEXPECTED_URL: "url tidak cocok",
+        Bot.ERROR_ITEM_NOT_FOUND: "item tidak ditemukan",
+        Bot.ERROR_OUT_OF_STOCK: "stok habis",
+        Bot.ERROR_ADD_TO_CART: "gagal menambah item ke cart",
+        Bot.ERROR_CHECKOUT_GET: "gagal mengambil info checkout",
+        Bot.ERROR_CHECKOUT: "gagal checkout",
+        Bot.ERROR_RESPONSE_NOT_ACCEPTABLE: "respon tidak diterima, mungkin item sudah habis (anda telat)",
+        Bot.ERROR_RESPONSE_NOT_OK: "gagal checkout, respon tidak ok"
     }.get(e.code(), f"Error tidak diketahui, code: {e.code()}"))
     exit(1)
