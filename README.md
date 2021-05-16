@@ -1,6 +1,5 @@
 # Bahan-Bahan (PC/Laptop)
 - Python 3.8.x
-- 3 Telur Ayam :D
 
 Download python di https://www.python.org/downloads/
 # Bahan-Bahan (Android)
