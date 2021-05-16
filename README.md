@@ -19,7 +19,7 @@ jika sudah, silahkan login dulu. jalankan perintah dibawah
 ```
 python login.py
 ```
-setelah berhasil, informasi login akan disimpan di cookie.txt, jadi tidak perlu susah" login setiap kali mau pake.
+setelah berhasil, informasi login akan disimpan di file `cookie`, jadi tidak perlu susah" login setiap kali mau pake.
 
 nah sekarang tinggal jalankan botnya
 ```
