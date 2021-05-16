@@ -8,31 +8,23 @@ import requests
 
 
 class JustAnException(Exception):  # i know this name is bad, but idk what to name
-    __code: int
-    __msg: str
+    code: int
 
-    def __init__(self, msg: str, code: int = -1):
-        super().__init__(msg)
-        self.__code = code
-        self.__msg = msg
-
-    def code(self) -> int:
-        return self.__code
-
-    def msg(self) -> str:
-        return self.__msg
+    def __init__(self, code: int = -1):
+        super().__init__()
+        self.code = code
 
 
 class Bot:
 
-    ERROR_UNEXPECTED_URL = 0x1
-    ERROR_ITEM_NOT_FOUND = 0x2
-    ERROR_OUT_OF_STOCK = 0x3
-    ERROR_ADD_TO_CART = 0x4
-    ERROR_CHECKOUT_GET = 0x5
-    ERROR_CHECKOUT = 0x6
-    ERROR_RESPONSE_NOT_ACCEPTABLE = 0x7
-    ERROR_RESPONSE_NOT_OK = 0x8
+    ERROR_UNEXPECTED_URL = 1
+    ERROR_ITEM_NOT_FOUND = 2
+    ERROR_OUT_OF_STOCK = 3
+    ERROR_ADD_TO_CART = 4
+    ERROR_CHECKOUT_GET = 5
+    ERROR_CHECKOUT = 6
+    ERROR_RESPONSE_NOT_ACCEPTABLE = 7
+    ERROR_RESPONSE_NOT_OK = 8
 
     user: User
     session: requests.Session
@@ -68,7 +60,7 @@ class Bot:
         # https://shopee.co.id/Item-Name.xxxx.xxxx
         match = search(r".*\.(?P<shopid>\d+)\.(?P<itemid>\d+)", url)
         if match is None:
-            raise JustAnException("unexpected url", Bot.ERROR_UNEXPECTED_URL)
+            raise JustAnException(Bot.ERROR_UNEXPECTED_URL)
         return self.fetch_item(int(match.group("itemid")), int(match.group("shopid")))
 
     def fetch_item(self, item_id: int, shop_id: int) -> Item:
@@ -81,7 +73,7 @@ class Bot:
         )
         item_data = resp.json()["item"]
         if item_data is None:
-            raise JustAnException("item not found", Bot.ERROR_ITEM_NOT_FOUND)
+            raise JustAnException(Bot.ERROR_ITEM_NOT_FOUND)
         return Item(
             item_id=item_data["itemid"],
             shop_id=item_data["shopid"],
@@ -124,7 +116,7 @@ class Bot:
 
     def add_to_cart(self, item: Item, model_index: int) -> CartItem:
         if not item.models[model_index].is_available():
-            raise JustAnException("out of stock", Bot.ERROR_OUT_OF_STOCK)
+            raise JustAnException(Bot.ERROR_OUT_OF_STOCK)
         resp = self.session.post(
             url="https://shopee.co.id/api/v4/cart/add_to_cart",
             headers=self.__default_headers(),
@@ -144,7 +136,7 @@ class Bot:
         if data["error"] != 0:
             print("modelid:", item.models[0].model_id)
             print(resp.text)
-            raise JustAnException(f"failed to add to cart {data['error']}", Bot.ERROR_ADD_TO_CART)
+            raise JustAnException(Bot.ERROR_ADD_TO_CART)
         data = data["data"]["cart_item"]
         return CartItem(
             add_on_deal_id=item.add_on_deal_info.add_on_deal_id,
@@ -249,7 +241,7 @@ class Bot:
         if not resp.ok:
             print(resp.status_code)
             print(resp.text)
-            raise JustAnException("checkout_get", Bot.ERROR_CHECKOUT_GET)
+            raise JustAnException(Bot.ERROR_CHECKOUT_GET)
 
         return resp.content
 
@@ -267,10 +259,9 @@ class Bot:
         )
         if "error" in resp.json():
             print(resp.text)
-            raise JustAnException("failed to checkout", Bot.ERROR_CHECKOUT)
+            raise JustAnException(Bot.ERROR_CHECKOUT)
         elif resp.status_code == 406:
             print(resp.text)
-            raise JustAnException("response not acceptable, maybe the item has run out",
-                                  Bot.ERROR_RESPONSE_NOT_ACCEPTABLE)
+            raise JustAnException(Bot.ERROR_RESPONSE_NOT_ACCEPTABLE)
         elif not resp.ok:
-            raise JustAnException(f"failed to checkout, response not ok: {resp.status_code}", Bot.ERROR_RESPONSE_NOT_OK)
+            raise JustAnException(Bot.ERROR_RESPONSE_NOT_OK)

@@ -127,5 +127,5 @@ except JustAnException as e:
         Bot.ERROR_CHECKOUT: "gagal checkout",
         Bot.ERROR_RESPONSE_NOT_ACCEPTABLE: "respon tidak diterima, mungkin item sudah habis (anda telat)",
         Bot.ERROR_RESPONSE_NOT_OK: "gagal checkout, respon tidak ok"
-    }.get(e.code(), f"Error tidak diketahui, code: {e.code()}"))
+    }[e.code])
     exit(1)
