@@ -1,8 +1,8 @@
-# Requirement (PC/Laptop)
+# Bahan-Bahan (PC/Laptop)
 - Python 3.8.x
 
 Download python di https://www.python.org/downloads/
-# Requirement (Android)
+# Bahan-Bahan (Android)
 - Termux
 - Python 3.8.x
 
