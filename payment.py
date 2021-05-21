@@ -1,33 +1,17 @@
 from enum import Enum
 from typing import Dict
+from dataclasses import dataclass
 
 
+@dataclass
 class PaymentChannel:
-    __name: str
-    __channel_id: int
-    __options: Dict[str, str]
-    __version: int
-
-    def __init__(self, name: str, channel_id: int, options: Dict[str, str] = None, version: int = 2):
-        self.__name = name
-        self.__channel_id = channel_id
-        self.__options = options
-        self.__version = version
-
-    def name(self) -> str:
-        return self.__name
-
-    def channel_id(self) -> int:
-        return self.__channel_id
-
-    def options(self) -> Dict[str, str]:
-        return self.__options
-
-    def version(self) -> int:
-        return self.__version
+    name: str
+    channel_id: int
+    options: Dict[str, str] = None
+    version: int = 2
 
     def has_option(self) -> bool:
-        return self.__options is not None
+        return self.options is not None
 
 
 class PaymentChannelList(Enum):

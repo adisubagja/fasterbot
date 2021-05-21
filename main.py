@@ -80,7 +80,7 @@ try:
     print(INFO, "Pilih metode pembayaran")
     payment_channels = dict(enumerate(PaymentChannelList))
     for index, channel in payment_channels.items():
-        print(f"{Fore.GREEN}[{index+1}] {Fore.BLUE}{channel.value.name()}")
+        print(f"{Fore.GREEN}[{index+1}] {Fore.BLUE}{channel.value.name}")
     print()
     selected_payment_channel = payment_channels[int_input("Pilihan: ", len(payment_channels))-1].value
     print()
