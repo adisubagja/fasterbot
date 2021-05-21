@@ -184,10 +184,10 @@ class Bot:
                     "use_coins": False
                 },
                 "selected_payment_channel_data": {
-                    "channel_id": payment.channel_id(),
-                    "channel_item_option_info": {"option_info": payment.options()[selected_option]
+                    "channel_id": payment.channel_id,
+                    "channel_item_option_info": {"option_info": payment.options[selected_option]
                         if payment.has_option() else ""},
-                    "version": payment.version()
+                    "version": payment.version
                 },
                 "shipping_orders": [{
                     "buyer_address_data": {
@@ -234,7 +234,7 @@ class Bot:
                 "tax_info": {
                     "tax_id": ""
                 },
-                "timestamp": time()
+                "timestamp": round(time())  # thanks to abrekok
             }
         )
 
