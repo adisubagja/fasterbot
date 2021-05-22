@@ -87,7 +87,7 @@ try:
 
     selected_option_info = None
     if selected_payment_channel.has_option():
-        options = dict(enumerate(selected_payment_channel.options().keys()))
+        options = dict(enumerate(selected_payment_channel.options.keys()))
         for index, option in options.items():
             print(f"{Fore.GREEN}[{index+1}] {Fore.BLUE}{option}")
         print()
