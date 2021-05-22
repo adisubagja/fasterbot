@@ -100,7 +100,7 @@ try:
             print(INFO, "Menunggu Flash Sale...", end='\r')
             sleep((datetime.fromtimestamp(item.upcoming_flash_sale.start_time) - datetime.now())
                   .total_seconds() - 2)
-            print(INFO, "Bersiap siap...", end='\r')
+            print(INFO, "Bersiap siap...        ", end='\r')
             while not item.is_flash_sale:
                 item = bot.fetch_item(item.item_id, item.shop_id)
         else:
