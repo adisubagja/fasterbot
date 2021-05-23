@@ -1,4 +1,4 @@
-# Perhatian
+# Ingfo
 Repo ini sudah tidak lagi dikembangkan, jadi tidak disarankan menggunakan bot ini di akun utama.
 
 # Bahan-Bahan (PC/Laptop)
