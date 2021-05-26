@@ -1,40 +1,43 @@
 from urllib.parse import urlencode
-from item         import *
-from user         import User
-from json         import dumps
-from re           import search
-from time         import time
-from checkoutdata import *
+from item import *
+from user import User
+from re import search
+from time import time
+from payment import *
 import requests
 
 
 class JustAnException(Exception):  # i know this name is bad, but idk what to name
-    __code: int
-    __msg: str
+    code: int
 
-    def __init__(self, msg: str, code: int = -1):
-        super().__init__(msg)
-        self.__code = code
-        self.__msg = msg
-
-    def code(self) -> int:
-        return self.__code
-
-    def msg(self) -> str:
-        return self.__msg
+    def __init__(self, code: int = -1):
+        super().__init__()
+        self.code = code
 
 
 class Bot:
+
+    ERROR_UNEXPECTED_URL = 1
+    ERROR_ITEM_NOT_FOUND = 2
+    ERROR_OUT_OF_STOCK = 3
+    ERROR_ADD_TO_CART = 4
+    ERROR_CHECKOUT_GET = 5
+    ERROR_CHECKOUT = 6
+    ERROR_RESPONSE_NOT_ACCEPTABLE = 7
+    ERROR_RESPONSE_NOT_OK = 8
+
     user: User
+    session: requests.Session
 
     def __init__(self, user: User):
         self.user = user
+        self.session = requests.Session()
+        self.session.cookies.update(self.user.cookie)
 
     def __default_headers(self) -> dict:
         return {
                 "Accept": "application/json",
                 "Content-Type": "application/json",
-                "Cookie": self.user.cookie,
                 "Referer": "https://shopee.co.id/",
                 "User-Agent": self.user.USER_AGENT,
                 "X-Csrftoken": self.user.csrf_token,
@@ -57,11 +60,11 @@ class Bot:
         # https://shopee.co.id/Item-Name.xxxx.xxxx
         match = search(r".*\.(?P<shopid>\d+)\.(?P<itemid>\d+)", url)
         if match is None:
-            raise JustAnException("unexpected url", 0x90b109)
+            raise JustAnException(Bot.ERROR_UNEXPECTED_URL)
         return self.fetch_item(int(match.group("itemid")), int(match.group("shopid")))
 
     def fetch_item(self, item_id: int, shop_id: int) -> Item:
-        resp = requests.get(
+        resp = self.session.get(
             "https://shopee.co.id/api/v2/item/get?" + urlencode({
                 "itemid": item_id,
                 "shopid": shop_id
@@ -70,7 +73,7 @@ class Bot:
         )
         item_data = resp.json()["item"]
         if item_data is None:
-            raise JustAnException("item not found", 0x69)
+            raise JustAnException(Bot.ERROR_ITEM_NOT_FOUND)
         return Item(
             item_id=item_data["itemid"],
             shop_id=item_data["shopid"],
@@ -113,11 +116,11 @@ class Bot:
 
     def add_to_cart(self, item: Item, model_index: int) -> CartItem:
         if not item.models[model_index].is_available():
-            raise JustAnException("out of stock", 0x2323)
-        resp = requests.post(
-            url="https://shopee.co.id/api/v2/cart/add_to_cart",
+            raise JustAnException(Bot.ERROR_OUT_OF_STOCK)
+        resp = self.session.post(
+            url="https://shopee.co.id/api/v4/cart/add_to_cart",
             headers=self.__default_headers(),
-            data=dumps({
+            json={
                 "checkout": True,
                 "client_source": 1,
                 "donot_add_quantity": False,
@@ -127,33 +130,33 @@ class Bot:
                 "shopid": item.shop_id,
                 "source": "",
                 "update_checkout_only": False
-            })
+            }
         )
         data = resp.json()
         if data["error"] != 0:
             print("modelid:", item.models[0].model_id)
             print(resp.text)
-            raise JustAnException(f"failed to add to cart {data['error']}", 0xb612)
+            raise JustAnException(Bot.ERROR_ADD_TO_CART)
         data = data["data"]["cart_item"]
         return CartItem(
             add_on_deal_id=item.add_on_deal_info.add_on_deal_id,
-            item_group_id=str(data["item_group_id"]) if data["item_group_id"] != 0 else None,
+            item_group_id=str(data["item_group_id"]) if data["item_group_id"] is not None else 0,
             item_id=data["itemid"],
             model_id=data["modelid"],
             price=data["price"],
             shop_id=item.shop_id
         )
 
-    def __checkout_get(self, payment: PaymentInfo, item: CartItem) -> bytes:
+    def __checkout_get(self, payment: PaymentChannel, selected_option: str, item: CartItem) -> bytes:
         """
         :param payment: Payment info
         :param item: Item
         :return: Checkout data
         """
-        resp = requests.post(
+        resp = self.session.post(
             url="https://shopee.co.id/api/v2/checkout/get",
             headers=self.__default_headers(),
-            data=dumps({
+            json={
                 "cart_type": 0,
                 "client_id": 0,
                 "device_info": {
@@ -181,9 +184,10 @@ class Bot:
                     "use_coins": False
                 },
                 "selected_payment_channel_data": {
-                    "channel_id": payment.channel.value,
-                    "channel_item_option_info": {"option_info": payment.option_info.value},
-                    "version": payment.channel.version
+                    "channel_id": payment.channel_id,
+                    "channel_item_option_info": {"option_info": payment.options[selected_option]
+                        if payment.has_option() else ""},
+                    "version": payment.version
                 },
                 "shipping_orders": [{
                     "buyer_address_data": {
@@ -230,74 +234,34 @@ class Bot:
                 "tax_info": {
                     "tax_id": ""
                 },
-                "timestamp": time()
-            })
+                "timestamp": round(time())  # thanks to abrekok
+            }
         )
 
         if not resp.ok:
             print(resp.status_code)
             print(resp.text)
-            raise JustAnException("failed to get checkout info", 0x1111)
+            raise JustAnException(Bot.ERROR_CHECKOUT_GET)
 
         return resp.content
 
-    def checkout(self, payment: PaymentInfo, item: CartItem):
+    def checkout(self, payment: PaymentChannel, selected_option: str, item: CartItem):
         """
         :param payment: payment method like COD/Alfamart
+        :param selected_option: selected option :)
         :param item: the item to checkout
         checkout an item that has been added to cart
         """
-        resp = requests.post(
+        resp = self.session.post(
             url="https://shopee.co.id/api/v2/checkout/place_order",
             headers=self.__default_headers(),
-            data=self.__checkout_get(payment, item)
+            data=self.__checkout_get(payment, selected_option, item)
         )
         if "error" in resp.json():
             print(resp.text)
-            raise JustAnException("failed to checkout", 0xaaaa)
+            raise JustAnException(Bot.ERROR_CHECKOUT)
         elif resp.status_code == 406:
             print(resp.text)
-            raise JustAnException("response not acceptable, maybe the item has run out", 0xaeee)
+            raise JustAnException(Bot.ERROR_RESPONSE_NOT_ACCEPTABLE)
         elif not resp.ok:
-            raise JustAnException(f"failed to checkout, response not ok: {resp.status_code}", 0xbacc)
-
-    def buy(self, item: Item, model_index: int, payment: PaymentInfo):
-        """
-        :param item: the item to buy
-        :param model_index: selected model
-        :param payment: payment method
-        just another way to add item to cart and checkout
-        """
-        cart_item = self.add_to_cart(item, model_index)
-        self.checkout(payment, cart_item)
-
-    def remove_item_from_cart(self, cart_item: CartItem):
-        """
-        :param cart_item: cart item to be removed
-        remove item from cart
-        """
-        resp = requests.post(
-            url="https://shopee.co.id/api/v4/cart/update",
-            headers=self.__default_headers(),
-            data=dumps({
-                "action_type": 2,
-                "updated_shop_order_ids": [
-                    {
-                        "item_briefs": [
-                            {
-                                "add_on_deal_id": cart_item.add_on_deal_id,
-                                "checkout": False,
-                                "item_group_id": cart_item.item_group_id,
-                                "itemid": cart_item.item_id,
-                                "modelid": cart_item.model_id,
-                                "price": cart_item.price,
-                                "shopid": cart_item.shop_id
-                            }
-                        ],
-                        "shopid": cart_item.shop_id
-                    }
-                ]
-            })
-        )
-        if resp.json()["error"] != 0:
-            raise JustAnException("failed to remove item from cart", 0x2232)
+            raise JustAnException(Bot.ERROR_RESPONSE_NOT_OK)

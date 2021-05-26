@@ -1,11 +1,11 @@
-from json        import dumps
-from enum        import Enum
-from random      import choices
-from string      import ascii_letters, digits
-from colorama    import Fore, init
-from hashlib     import md5, sha256
+from enum import Enum
+from random import choices
+from string import ascii_letters, digits
+from colorama import Fore, init
+from hashlib import md5, sha256
 import os
 import requests
+import pickle
 
 
 class LoginException(Exception):
@@ -52,13 +52,12 @@ class Login:
         resp = self.session.post(
             url="https://shopee.co.id/api/v2/authentication/login",
             headers=self.__default_headers(),
-            data=dumps({
+            json={
                 self.user_type: user,
                 "password": password,
                 "support_ivs": True,
                 "support_whats_app": True
-            }),
-            cookies=self.session.cookies
+            }
         )
         data = resp.json()
         if data["error"] == 3:
@@ -77,35 +76,27 @@ class Login:
             "x-csrftoken": self.csrf_token
         }
 
-    def get_cookie_as_string(self) -> str:
-        output = ""
-        for k, v in self.session.cookies.items():
-            output += f"{k}={v}; "
-        return output[:-2]
-
     def send_otp(self, channel: OTPChannel = OTPChannel.SMS):
         self.session.post(
             url="https://shopee.co.id/api/v2/authentication/resend_otp",
             headers=self.__default_headers(),
-            data=dumps({
+            json={
                 "channel": channel.value,
                 "force_channel": True,
                 "operation": 5,
                 "support_whats_app": True
-            }),
-            cookies=self.session.cookies
+            }
         )
 
     def verify(self, code: str) -> bool:
         resp = self.session.post(
             url="https://shopee.co.id/api/v2/authentication/vcode_login",
             headers=self.__default_headers(),
-            data=dumps({
+            json={
                 "otp": code,
                 self.user_type: self.user,
                 "support_ivs": True
-            }),
-            cookies=self.session.cookies
+            }
         )
 
         data = resp.json()
@@ -162,8 +153,8 @@ if __name__ == "__main__":
     else:
         print(ERROR, "Verifikasi gagal, kode otp tidak valid")
         exit(1)
-    with open("cookie.txt", 'w') as f:
-        f.write(login.get_cookie_as_string())
+    with open("cookie", 'wb') as f:
+        pickle.dump(login.session.cookies, f)
 
     print(WARNING, "Note: perlu login ulang setelah beberapa hari")
     print(INFO, "Login sukses")

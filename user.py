@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Final
+from requests.cookies import RequestsCookieJar
 import requests
 
 
@@ -29,32 +30,28 @@ class User:
     phone: str
     phone_verified: bool
     default_address: Address
-    cookie: str
+    cookie: RequestsCookieJar
     csrf_token: str
     with open("user_agent.txt", 'r') as __user_agent:
         USER_AGENT: Final[str] = __user_agent.read()
 
     @staticmethod
-    def login(cookie: str):
+    def login(cookie: RequestsCookieJar):
         resp = requests.get(
             "https://shopee.co.id/api/v1/account_info",
             headers={
                 "Accept": "*/*",
                 "Accept-Encoding": "gzip, deflate, br",
                 "Referer": "https://shopee.co.id/",
-                "User-Agent": User.USER_AGENT,
-                "Cookie": cookie
-            }
+                "User-Agent": User.USER_AGENT
+            },
+            cookies=cookie
         )
         data = resp.json()
+
         if len(data) == 0:
             raise Exception("failed to login, invalid cookie")
-        csrf_token = None
-        for cookie1 in cookie.split(';'):
-            key_value = cookie1.split('=')
-            if key_value[0].strip() == "csrftoken":
-                csrf_token = key_value[1]
-                break
+
         return User(
             userid=data["userid"],
             shopid=data["shopid"],
@@ -78,5 +75,5 @@ class User:
                 zipcode=data["default_address"]["zipcode"]
             ),
             cookie=cookie,
-            csrf_token=csrf_token
+            csrf_token=cookie.get("csrftoken")
         )
